@@ -1,4 +1,3 @@
-from .buffer import Buffer
 from .position import Position
 
 
@@ -6,7 +5,7 @@ class ParseException(Exception):
 
     def __init__(self, 
             message: str, 
-            buffer: Buffer, 
+            buffer, 
             position: Position = None):
         
         self.message = message

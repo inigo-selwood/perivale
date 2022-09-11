@@ -1,7 +1,7 @@
 from copy import copy
 
 from .position import Position
-
+from .parse_exception import ParseException
 
 class Buffer:
 
@@ -403,3 +403,6 @@ class Buffer:
             return 0
 
         return self.line_indentations[line_number - 1]
+
+    def error(self, message: str) -> ParseException:
+        return ParseException(message, self)
