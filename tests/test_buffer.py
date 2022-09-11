@@ -1,4 +1,6 @@
-from perivale import Buffer, Set
+import pytest
+
+from perivale import Buffer, Set, ParseException
 
 
 def test_increment():
@@ -58,12 +60,14 @@ def test_parse_bounded_text():
     assert buffer.parse_bounded_text(("'", "'")) == "'a string'"
     
     # No start token match
-    buffer = Buffer("a string'")
-    assert buffer.parse_bounded_text(("'", "'")) == ""
+    with pytest.raises(ParseException):
+        buffer = Buffer("a string'")
+        buffer.parse_bounded_text(("'", "'"))
     
     # No end token match
-    buffer = Buffer("'a string")
-    assert buffer.parse_bounded_text(("'", "'")) == ""
+    with pytest.raises(ParseException):
+        buffer = Buffer("'a string")
+        buffer.parse_bounded_text(("'", "'"))
    
     # Bounded text with escaped end code
     buffer = Buffer("'\\''")
@@ -86,10 +90,12 @@ def test_parse_bounded_text():
     assert result == "<<>>"
 
     # Disallowed newline
-    buffer = Buffer("'\n'")
-    assert buffer.parse_bounded_text(("'", "'")) == ""
-
+    with pytest.raises(ParseException):
+        buffer = Buffer("'\n'")
+        buffer.parse_bounded_text(("'", "'"))
+    
     # Permitted newline
+    buffer = Buffer("'\n'")
     result = buffer.parse_bounded_text(("'", "'"), permit_newlines=True)
     assert result == "'\n'"
 

@@ -187,6 +187,11 @@ class Buffer:
         -------
         result: str
             the parsed text
+        
+        Raises
+        ------
+        not_found: ParseException
+            if no value in the set was encountered
         """
 
         result = ""
@@ -200,7 +205,10 @@ class Buffer:
             result += character
             index += 1
         
-        if result and consume:
+        if not result:
+            raise self.error(f"expected a value in the set {{{set}}}")
+        
+        if consume:
             self.increment(len(result))
         return result
     
@@ -218,6 +226,11 @@ class Buffer:
         -------
         result: str
             the parsed string
+        
+        Raises
+        ------
+        not_found: ParseException
+            if no value in the range was found
         """
         
         # Unpack bounds values
@@ -237,8 +250,12 @@ class Buffer:
             result += character
             index += 1
         
+        if not result:
+            message = f"expected value(s) in the range [{lower}:{upper}]"
+            raise self.error(message)
+
         # Consume if requested
-        if result and consume:
+        if consume:
             self.increment(len(result))
         return result
     
@@ -268,6 +285,11 @@ class Buffer:
         -------
         result: str
             the parsed expression, including its delimiters
+        
+        Raises
+        ------
+        exception: ParseException
+            if a formatting error was encountered
         """
 
         # Unpack bounds
@@ -278,7 +300,7 @@ class Buffer:
         # Consume start token
         start_position = self.copy_position()
         if not self.match(start_token, consume=True):
-            return ""
+            raise self.error(f"expected '{start_token}'")
         
         # Add escape for end token
         if escape_bounds:
@@ -290,7 +312,7 @@ class Buffer:
             if (end_token != "\n" and 
                     self.match("\n") and 
                     not permit_newlines):
-                break
+                raise self.error("unexpected newline")
             
             for symbol, code in escape_codes.items():
                 if self.match(symbol, consume=True):
@@ -303,7 +325,7 @@ class Buffer:
         
         # Check end token found
         if not self.match(end_token, consume=True):
-            result = ""
+            raise self.error(f"expected '{end_token}'")
         
         # Consume if requested
         if not result or not consume:
