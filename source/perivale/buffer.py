@@ -428,5 +428,5 @@ class Buffer:
 
         return self.line_indentations[line_number - 1]
 
-    def error(self, message: str) -> ParseException:
-        return ParseException(message, self)
+    def error(self, message: str, position: Position = None) -> ParseException:
+        return ParseException(message, self, position)
