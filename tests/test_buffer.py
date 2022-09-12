@@ -64,6 +64,11 @@ def test_parse_bounded_text():
         buffer = Buffer("a string'")
         buffer.parse_bounded_text(("'", "'"))
     
+    # Unexpected end-of-file
+    with pytest.raises(ParseException):
+        buffer = Buffer("'a string")
+        buffer.parse_bounded_text(("'", "'"))
+    
     # No end token match
     with pytest.raises(ParseException):
         buffer = Buffer("'a string")

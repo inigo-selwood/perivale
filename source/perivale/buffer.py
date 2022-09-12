@@ -307,9 +307,11 @@ class Buffer:
             escape_codes[f"\\{end_token}"] = end_token
 
         result = start_token
-        while not self.finished():
+        while True:
 
-            if (end_token != "\n" and 
+            if self.finished():
+                raise self.error("unexpected end-of-file")
+            elif (end_token != "\n" and 
                     self.match("\n") and 
                     not permit_newlines):
                 raise self.error("unexpected newline")
