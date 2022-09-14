@@ -26,3 +26,11 @@ def test_parse_exception():
     assert f"{exception}" == """[2:-1] (message)
     dolor sit amet
                   ^"""
+
+    buffer = Buffer("\n")
+    buffer.skip_space(include_newlines=True)
+    exception = ParseException("message", buffer)
+    assert f"{exception}" == """[1:-1] (message)
+    
+    ^"""
+
