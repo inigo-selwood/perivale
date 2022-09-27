@@ -1,7 +1,9 @@
 from copy import copy
 
 from .position import Position
-from .parse_exception import ParseException
+from .excerpt import Excerpt
+from .errors import ParseError
+
 
 class Buffer:
 
@@ -48,6 +50,38 @@ class Buffer:
         elif text[0] == "\n":
             self.position.column = -1
     
+    def position_valid(self, position: Position):
+        """ Checks whether a given position is valid for this buffer
+        
+        Arguments
+        ---------
+        position: Position
+            the position to check
+        
+        Returns
+        -------
+        valid: bool
+            true if the position is valid
+        """
+
+        index, line, column = position.index, position.line, position.column
+
+        if index > self.length or line > self.line_count:
+            return False
+        
+        start = self.line_indices[line - 1]
+        if line == self.line_count and column == -1:
+            return index == self.length
+        
+        if column == -1:
+            if line == self.line_count:
+                return index == self.length
+            
+            next_index = self.line_indices[line]
+            return index == next_index - 1
+        
+        return index == start + column - 1        
+
     def increment(self, steps: int = 1):
         """ Increments the buffer's position
         
@@ -117,6 +151,24 @@ class Buffer:
 
         return copy(self.position)
     
+    def set_position(self, position: Position):
+        """ Sets the buffer's position, checking its validity
+        
+        Arguments
+        ---------
+        position: Position
+            the position to set
+        
+        Raises
+        ------
+        error: IndexError
+            if the position is invalid
+        """
+
+        if not self.position_valid(position):
+            raise IndexError(f"invalid position: {position}")
+        self.position = copy(position)
+    
     def read(self, consume: bool = False) -> str:
         """ Reads the next character from the buffer
         
@@ -174,170 +226,6 @@ class Buffer:
         
         return result
 
-    def parse_set(self, set: str, consume: bool = False) -> str:
-        """ Parses a string comprised of the given set characters
-        
-        Arguments
-        ---------
-        set: str
-            the set of permissible parse characters
-        consume: bool
-            if true, increments past the parsed string
-        
-        Returns
-        -------
-        result: str
-            the parsed text
-        
-        Raises
-        ------
-        not_found: ParseException
-            if no value in the set was encountered
-        """
-
-        result = ""
-        index = self.position.index
-        while index < self.length:
-
-            character = self.text[index]
-            if character not in set:
-                break
-
-            result += character
-            index += 1
-        
-        if not result:
-            raise self.error(f"expected a value in the set {{{set}}}")
-        
-        if consume:
-            self.increment(len(result))
-        return result
-    
-    def parse_range(self, range: tuple, consume: bool = False) -> str:
-        """ Parses a string comprised of characters in a given range
-        
-        Arguments
-        ---------
-        range: tuple
-            the (upper, lower) bounds of the range
-        consume: bool
-            if true, increments past the parsed string
-        
-        Returns
-        -------
-        result: str
-            the parsed string
-        
-        Raises
-        ------
-        not_found: ParseException
-            if no value in the range was found
-        """
-        
-        # Unpack bounds values
-        if len(range) != 2:
-            raise Exception("invalid range")
-        lower, upper = [ord(letter) for letter in range]
-
-        result = ""
-        index = self.position.index
-        while index < self.length:
-
-            character = self.text[index]
-            value = ord(character)
-            if value < lower or value > upper:
-                break
-
-            result += character
-            index += 1
-        
-        if not result:
-            message = f"expected value(s) in the range [{lower}:{upper}]"
-            raise self.error(message)
-
-        # Consume if requested
-        if consume:
-            self.increment(len(result))
-        return result
-    
-    def parse_bounded_text(self, 
-            bounds: tuple, 
-            escape_bounds: bool = True,
-            escape_codes: dict = {}, 
-            permit_newlines: bool = False,
-            consume: bool = False) -> str:
-        
-        """ Parses a bounded expression
-
-        Arguments
-        ---------
-        bounds: tuple
-            the start and end delimiters
-        escape_bounds: bool
-            if true, allows the end delimiter to be escaped with a backslash
-        escape_codes: dict
-            a set of mappings for escape codes
-        permit_newlines: bool
-            if true, allows newlines in the expression
-        consume: bool
-            if true, increments parsed the parsed expression
-        
-        Returns
-        -------
-        result: str
-            the parsed expression, including its delimiters
-        
-        Raises
-        ------
-        exception: ParseException
-            if a formatting error was encountered
-        """
-
-        # Unpack bounds
-        if len(bounds) != 2:
-            raise Exception("invalid bounds")
-        start_token, end_token = bounds
-        
-        # Consume start token
-        start_position = self.copy_position()
-        if not self.match(start_token, consume=True):
-            raise self.error(f"expected '{start_token}'")
-        
-        # Add escape for end token
-        if escape_bounds:
-            escape_codes[f"\\{end_token}"] = end_token
-
-        result = start_token
-        while True:
-
-            if self.finished():
-                raise self.error("unexpected end-of-file")
-            elif (end_token != "\n" and 
-                    self.match("\n") and 
-                    not permit_newlines):
-                raise self.error("unexpected newline")
-            
-            for symbol, code in escape_codes.items():
-                if self.match(symbol, consume=True):
-                    result += code
-            
-            if self.match(end_token):
-                break
-        
-            result += self.read(consume=True)
-        
-        # Check end token found
-        if not self.match(end_token, consume=True):
-            raise self.error(f"expected '{end_token}'")
-        
-        # Consume if requested
-        if not result or not consume:
-            self.position = start_position
-        
-        if result:
-            result += end_token
-        return result
-            
     def skip_line(self):
         """ Skips the current line """
 
@@ -428,6 +316,14 @@ class Buffer:
             return 0
 
         return self.line_indentations[line_number - 1]
+    
+    def excerpt(self, 
+            start: Position = None, 
+            end: Position = None, 
+            message: str = None):
+        return Excerpt(self, start, end, message)
 
-    def error(self, message: str, position: Position = None) -> ParseException:
-        return ParseException(message, self, position)
+    def error(self, message: str, position: Position = None):
+        error = ParseError()
+        error.add_excerpt(Excerpt(position, annotation=message))
+        return error

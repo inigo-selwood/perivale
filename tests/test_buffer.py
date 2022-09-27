@@ -1,112 +1,73 @@
 import pytest
 
-from perivale import Buffer, Set, ParseException
+from perivale import Buffer
+
+
+def test_position_valid():
+
+    text = """lorem ipsum
+dolor sit amet,
+consectetur adipiscing"""
+    buffer = Buffer(text)
+
+    while not buffer.finished():
+        position = buffer.copy_position()
+        assert buffer.position_valid(position)
+        buffer.increment()
 
 
 def test_increment():
 
+    # Simple (1 step)
     buffer = Buffer(".")
     buffer.increment()
     assert buffer.finished()
 
+    # Multiple steps
     buffer = Buffer("...")
     buffer.increment(steps=3)
     assert buffer.finished()
 
 
 def test_finished():
+
+    # Empty
     assert Buffer("").finished()
+
+    # Non-empty
     assert not Buffer(" ").finished()
 
 
 def test_read():
+
+    # Read
     buffer = Buffer(".")
     assert buffer.read() == "."
+    assert not buffer.finished()
 
+    # Read, consuming
     assert buffer.read(consume=True) == "."
     assert buffer.finished()
 
+    # Read, buffer finished
+    assert buffer.read() == ""
+
 
 def test_match():
+
+    # Match
     buffer = Buffer("lorem ipsum")
     assert buffer.match("lorem ipsum")
     
+    # No match
     assert not buffer.match("dolor sit amet")
 
+    # Match, consuming
     assert buffer.match("lorem ipsum", consume=True)
     assert buffer.finished()
 
 
-def test_parse_set():
-    buffer = Buffer("lowercase")
-    assert buffer.parse_set(Set.LOWERCASE) == "lowercase"
-
-    assert buffer.parse_set(Set.LOWERCASE, consume=True) == "lowercase"
-    assert buffer.finished()
-
-
-def test_parse_range():
-    buffer = Buffer("lorem ipsum")
-    assert buffer.parse_range((" ", "~")) == "lorem ipsum"
-
-    assert buffer.parse_range((" ", "~"), consume=True) == "lorem ipsum"
-    assert buffer.finished()
-
-
-def test_parse_bounded_text():
-
-    # Simple bounded text
-    buffer = Buffer("'a string'")
-    assert buffer.parse_bounded_text(("'", "'")) == "'a string'"
-    
-    # No start token match
-    with pytest.raises(ParseException):
-        buffer = Buffer("a string'")
-        buffer.parse_bounded_text(("'", "'"))
-    
-    # Unexpected end-of-file
-    with pytest.raises(ParseException):
-        buffer = Buffer("'a string")
-        buffer.parse_bounded_text(("'", "'"))
-    
-    # No end token match
-    with pytest.raises(ParseException):
-        buffer = Buffer("'a string")
-        buffer.parse_bounded_text(("'", "'"))
-   
-    # Bounded text with escaped end code
-    buffer = Buffer("'\\''")
-    assert buffer.parse_bounded_text(("'", "'"), escape_bounds=True) == "'''"
-
-    # Escape codes
-    escape_codes = {
-        "\\v": "\v",
-        "\\t": "\t",
-        "\\r": "\r",
-        "\\n": "\n",
-    }
-    buffer = Buffer("'\\v\\t\\r\\n'")
-    result = buffer.parse_bounded_text(("'", "'"), escape_codes=escape_codes)
-    assert result == "'\v\t\r\n'"
-
-    # Nested escaped end codes
-    buffer = Buffer("<<\\>>")
-    result = buffer.parse_bounded_text(("<", ">"), escape_bounds=True)
-    assert result == "<<>>"
-
-    # Disallowed newline
-    with pytest.raises(ParseException):
-        buffer = Buffer("'\n'")
-        buffer.parse_bounded_text(("'", "'"))
-    
-    # Permitted newline
-    buffer = Buffer("'\n'")
-    result = buffer.parse_bounded_text(("'", "'"), permit_newlines=True)
-    assert result == "'\n'"
-
-
 def test_skip_line():
-
     buffer = Buffer("1\n2\n")
     assert buffer.read("1")
 
@@ -119,10 +80,12 @@ def test_skip_line():
 
 def test_skip_space():
 
+    # Whitespace
     buffer = Buffer(" \t\v\r")
     buffer.skip_space()
     assert buffer.finished()
 
+    # Whitespace and newlines
     buffer = Buffer(" \t\v\r\n")
     buffer.skip_space(include_newlines=True)
     assert buffer.finished()
@@ -130,17 +93,31 @@ def test_skip_space():
 
 def test_line_text():
 
+    # Current line
     buffer = Buffer("lorem ipsum\ndolor sit amet")
     assert buffer.line_text() == "lorem ipsum"
+
+    # Arbitrary lines
     assert buffer.line_text(line_number=1) == "lorem ipsum"
     assert buffer.line_text(line_number=2) == "dolor sit amet"
     assert buffer.line_text(line_number=3) == ""
 
+    # Invalid line number
+    with pytest.raises(Exception):
+        assert buffer.line_text(line_number=4)
+
 
 def test_line_indentation():
 
+    # Current line
     buffer = Buffer("  \n\t\n")
     assert buffer.line_indentation() == 2
+
+    # Arbitrary line
     assert buffer.line_indentation(line_number=1) == 2
     assert buffer.line_indentation(line_number=2) == 4
     assert buffer.line_indentation(line_number=3) == 0
+
+    # Invalid line number
+    with pytest.raises(Exception):
+        assert buffer.line_indentation(line_number=4)
