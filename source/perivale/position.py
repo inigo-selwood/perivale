@@ -17,7 +17,10 @@ class Position:
 
         def __str__(self) -> str:
             start, end = (self.start, self.end)
-            return f"[{start.line}:{start.column} ... {end.line}:{end.column}]"
+            if start.line == end.line:
+                return f"[{start.line}:{start.column} - {end.column}]"
+            
+            return f"[{start.line}:{start.column} - {end.line}:{end.column}]"
 
     def __init__(self, index: int = 0, line: int = 1, column: int = 1):
         self.index = index
@@ -26,4 +29,3 @@ class Position:
     
     def __str__(self) -> str:
         return f"[{self.line}:{self.column}]"
-

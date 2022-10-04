@@ -33,7 +33,7 @@ consectetur adipiscing"""
     # With length
     end = Position(5, 1, 6)
     excerpt = Excerpt(buffer, end=end)
-    assert excerpt.__str__() == """[1:1 ... 1:6]
+    assert excerpt.__str__() == """[1:1 - 6]
     lorem ipsum
     ^^^^^"""
 
@@ -42,7 +42,7 @@ consectetur adipiscing"""
     end.line = 2
     end.column = 6
     excerpt = Excerpt(buffer, end=end)
-    assert excerpt.__str__() == """[1:1 ... 2:6]
+    assert excerpt.__str__() == """[1:1 - 2:6]
     lorem ipsum
     ^^^^^^^^^^^
     dolor sit amet,
@@ -51,7 +51,7 @@ consectetur adipiscing"""
     # Over more than two lines
     end = Position(39, 3, 12)
     excerpt = Excerpt(buffer, end=end)
-    assert excerpt.__str__() == """[1:1 ... 3:12]
+    assert excerpt.__str__() == """[1:1 - 3:12]
     lorem ipsum
     ^^^^^^^^^^^
     ...
@@ -63,7 +63,7 @@ consectetur adipiscing"""
     end = Position(17, 2, 6)
 
     excerpt = Excerpt(buffer, start, end)
-    assert excerpt.__str__() == """[1:-1 ... 2:6]
+    assert excerpt.__str__() == """[1:-1 - 2:6]
     dolor sit amet,
     ^^^^^"""
 
@@ -71,7 +71,7 @@ consectetur adipiscing"""
     start = Position(0, 1, 1)
     end = Position(11, 1, -1)
     excerpt = Excerpt(buffer, start, end)
-    assert excerpt.__str__() == """[1:1 ... 1:-1]
+    assert excerpt.__str__() == """[1:1 - -1]
     lorem ipsum
     ^^^^^^^^^^^"""
 

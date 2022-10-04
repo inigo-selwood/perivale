@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .position import Position
 
 
@@ -22,7 +24,9 @@ class Excerpt:
             start = buffer.copy_position()
         elif end and end.index == start.index:
             end = None
-        self.position = start if not end else Position.Delta(start, end)
+        
+        self.start = start
+        self.end = end
         
         # Single line, single character
         self.text = ""
@@ -65,7 +69,11 @@ class Excerpt:
             self.text += f"{end_line}\n    {end_caret}"
 
     def __str__(self) -> str:
-        result = f"{self.position}"
+        position = self.start 
+        if self.end:
+            position = Position.Delta(self.start, self.end)
+
+        result = f"{position}"
         if self.annotation:
             result += f"({self.annotation})"
         return result + f"\n    {self.text}"

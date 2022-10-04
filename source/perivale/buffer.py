@@ -316,14 +316,3 @@ class Buffer:
             return 0
 
         return self.line_indentations[line_number - 1]
-    
-    def excerpt(self, 
-            start: Position = None, 
-            end: Position = None, 
-            message: str = None):
-        return Excerpt(self, start, end, message)
-
-    def error(self, message: str, position: Position = None):
-        error = ParseError()
-        error.add_excerpt(Excerpt(position, annotation=message))
-        return error
