@@ -1,9 +1,9 @@
 import pytest
 
-from perivale import Buffer, Excerpt, Position
+from perivale import Buffer, PointExcerpt, RangeExcerpt, Position
 
 
-def test_excerpt():
+def test_point_excerpt():
 
     text = """lorem ipsum
 dolor sit amet,
@@ -11,102 +11,94 @@ consectetur adipiscing"""
     buffer = Buffer(text)
 
     # Simple
-    excerpt = Excerpt(buffer)
+    position = Position(0, 1, 1)
+    excerpt = PointExcerpt(buffer, position)
     assert excerpt.__str__() == """[1:1]
-    lorem ipsum
-    ^"""
+lorem ipsum
+^"""
 
     # At position
     position = Position(6, 1, 7)
-    excerpt = Excerpt(buffer, position)
+    excerpt = PointExcerpt(buffer, position)
     assert excerpt.__str__() == """[1:7]
-    lorem ipsum
-          ^"""
+lorem ipsum
+      ^"""
         
     # At end of line
     position = Position(11, 1, -1)
-    excerpt = Excerpt(buffer, position)
+    excerpt = PointExcerpt(buffer, position)
     assert excerpt.__str__() == """[1:-1]
-    lorem ipsum
-               ^"""
+lorem ipsum
+           ^"""
     
-    # With length
-    end = Position(5, 1, 6)
-    excerpt = Excerpt(buffer, end=end)
-    assert excerpt.__str__() == """[1:1 - 6]
-    lorem ipsum
-    ^^^^^"""
 
-    # Over two lines
-    end = Position(17, 2, 5)
-    end.line = 2
-    end.column = 6
-    excerpt = Excerpt(buffer, end=end)
-    assert excerpt.__str__() == """[1:1 - 2:6]
-    lorem ipsum
-    ^^^^^^^^^^^
-    dolor sit amet,
-    ^^^^^"""
-
-    # Over more than two lines
-    end = Position(39, 3, 12)
-    excerpt = Excerpt(buffer, end=end)
-    assert excerpt.__str__() == """[1:1 - 3:12]
-    lorem ipsum
-    ^^^^^^^^^^^
-    ...
-    consectetur adipiscing
-    ^^^^^^^^^^^"""
-
-    # Starting at newline (start line should be elided)
-    start = Position(11, 1, -1)
-    end = Position(17, 2, 6)
-
-    excerpt = Excerpt(buffer, start, end)
-    assert excerpt.__str__() == """[1:-1 - 2:6]
-    dolor sit amet,
-    ^^^^^"""
-
-    # Ending at newline
-    start = Position(0, 1, 1)
-    end = Position(11, 1, -1)
-    excerpt = Excerpt(buffer, start, end)
-    assert excerpt.__str__() == """[1:1 - -1]
-    lorem ipsum
-    ^^^^^^^^^^^"""
-
-
-def test_exception_fail():
+def test_range_excerpt():
 
     text = """lorem ipsum
 dolor sit amet,
 consectetur adipiscing"""
     buffer = Buffer(text)
 
-    # Invalid start/end indices
-    positions = [
-        (0, 0),
-        (1, 0),
-        (0, 1),
+    start = Position(0, 1, 1)
 
-        (1, 12),
-        (2, 16),
-        (3, 23),
+    # Simple
+    end = Position(5, 1, 6)
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:1 - 6]
+lorem ipsum
+^^^^^"""
 
-        (4, -1),
-    ]
+    # Over two lines
+    end = Position(17, 2, 5)
+    end.line = 2
+    end.column = 6
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:1 - 2:6]
+lorem ipsum
+^^^^^^^^^^^
+dolor sit amet,
+^^^^^"""
 
-    for start_tuple in positions:
-        line, column = start_tuple
-        start = Position()
-        start.line = line
-        start.column = column
-        
-        for end_tuple in positions:
-            line, column = end_tuple
-            end = Position()
-            end.line = line
-            end.column = column
+    # Over more than two lines
+    end = Position(39, 3, 12)
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:1 - 3:12]
+lorem ipsum
+^^^^^^^^^^^
+...
+consectetur adipiscing
+^^^^^^^^^^^"""
 
-            with pytest.raises(IndexError):
-                Excerpt(buffer, start, end)
+    # Starting at newline (caret should be elided)
+    start = Position(11, 1, -1)
+    end = Position(17, 2, 6)
+
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:-1 - 2:6]
+lorem ipsum
+dolor sit amet,
+^^^^^"""
+
+    # Ending at newline
+    start = Position(0, 1, 1)
+    end = Position(11, 1, -1)
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:1 - -1]
+lorem ipsum
+^^^^^^^^^^^"""
+
+    # Ending at start-of-line
+    end = Position(12, 2, 1)
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:1 - 2:1]
+lorem ipsum
+^^^^^^^^^^^
+dolor sit amet,"""
+
+    # Ending at newline, starting at start-of-line
+    start = Position(11, 1, -1)
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[1:-1 - 2:1]
+lorem ipsum
+dolor sit amet,"""
+

@@ -1,16 +1,15 @@
 from copy import copy
 
 from .position import Position
-from .excerpt import Excerpt
-from .errors import ParseError
+from .excerpt import PointExcerpt, RangeExcerpt
 
 
 class Buffer:
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, source: str = ""):
         self.text = text
         self.length = len(text)
-
+        self.source = source
 
         self.line_indices = []
         self.line_indentations = []
@@ -316,3 +315,58 @@ class Buffer:
             return 0
 
         return self.line_indentations[line_number - 1]
+    
+    def point_excerpt(self, position: Position = None) -> PointExcerpt:
+        """ Creates a point excerpt
+
+        If no position is given, the current buffer position is inferred
+        
+        Arguments
+        ---------
+        position: Position
+            the position of the excerpt
+        
+        Returns
+        -------
+        excerpt: PointExcerpt
+            the excerpt created
+        
+        Raises
+        ------
+        position_invalid: ValueError
+            if the position given is invalid
+        """
+
+        if not position:
+            position = self.copy_position()
+        return PointExcerpt(self, position)
+    
+    def range_excerpt(self, start: Position, end: Position = None):
+        """ Creates a range excerpt
+
+        If no end position is given, the current buffer position is inferred
+        
+        Arguments
+        ---------
+        start: Position
+            position of the excerpt start
+        end: Position
+            position of the excerpt end
+        
+        Returns
+        -------
+        excerpt: RangeExcerpt
+            the excerpt created
+        
+        Raises
+        ------
+        position_invalid: ValueError
+            if one of the positions given is invalid
+        position_illogical: IndexError
+            if the range given (or inferred) doesn't make sense, ie: the start
+            position succeeds the end
+        """
+        
+        if not end:
+            end = self.copy_position()
+        return RangeExcerpt(self, start, end)

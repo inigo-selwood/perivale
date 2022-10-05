@@ -1,21 +1,25 @@
 from __future__ import annotations
 
 from .excerpt import Excerpt
-from .position import Position
 
 
 class ParseError:
 
-    def __init__(self, buffer):
-        self.buffer = buffer
+    def __init__(self):
         self.excerpts = []
     
     def __str__(self) -> str:
-        return "\n".join([excerpt.__str__() for excerpt in self.excerpts])
-    
-    def add_excerpt(self, message: str, 
-            start: Position = None, 
-            end: Position = None):
+
+        result = []
+        for pair in self.excerpts:
+            message, excerpt = pair
+            annotated_excerpt = message
+
+            lines = f"{excerpt}".split("\n")
+            annotated_excerpt += "".join([f"\n\t{line}" for line in lines])
+            result.append(annotated_excerpt)
         
-        excerpt = Excerpt(self.buffer, start, end, message)
-        self.excerpts.append(excerpt)
+        return "\n".join(result)
+    
+    def add_excerpt(self, message: str, excerpt: Excerpt):
+        self.excerpts.append((message, excerpt))
