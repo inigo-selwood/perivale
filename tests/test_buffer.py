@@ -1,6 +1,6 @@
 import pytest
 
-from perivale import Buffer
+from perivale import Buffer, Position
 
 
 def test_position_valid():
@@ -14,14 +14,18 @@ consectetur adipiscing"""
         position = buffer.copy_position()
         assert buffer.position_valid(position)
         buffer.increment()
+    
+    assert buffer.position_valid(Position(len(text), -1, -1))
 
 
 def test_increment():
 
     # Simple (1 step)
     buffer = Buffer(".")
+    assert f"{buffer.position}" == "[1:1]"
     buffer.increment()
     assert buffer.finished()
+    assert f"{buffer.position}" == "[-1:-1]"
 
     # Multiple steps
     buffer = Buffer("...")

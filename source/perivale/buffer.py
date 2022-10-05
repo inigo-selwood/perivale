@@ -65,6 +65,9 @@ class Buffer:
 
         index, line, column = position.index, position.line, position.column
 
+        if index == self.length and line == -1 and column == -1:
+            return True
+
         if index > self.length or line > self.line_count:
             return False
         
@@ -121,7 +124,7 @@ class Buffer:
 
             if self.position.index == self.length:
                 self.position.column = -1
-                self.position.line = self.line_count
+                self.position.line = -1
             elif self.text[self.position.index] == "\n":
                 self.position.column = -1
     
