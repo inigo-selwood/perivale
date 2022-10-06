@@ -48,7 +48,7 @@ class RangeExcerpt(Excerpt):
         
         self.source = buffer.source
 
-        if start.line == end.line:
+        if start.line == end.line or start.line == buffer.line_count:
             self.lines = [buffer.line_text(start.line)]
         else:
             self.lines = [
@@ -74,7 +74,7 @@ class RangeExcerpt(Excerpt):
             result += f" ({self.source})"
 
         # Single line
-        if start_line == end_line:
+        if len(self.lines) == 1:
             line = self.lines[0]
             start_index = start_column - 1
             end_column = end_column - 1 if end_column != -1 else len(line)

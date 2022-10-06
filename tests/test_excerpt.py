@@ -109,3 +109,10 @@ dolor sit amet,"""
 lorem ipsum
 dolor sit amet,"""
 
+    # Ending at end-of-file
+    start = Position(28, 3, 1)
+    end = Position(len(text), -1, -1)
+    excerpt = RangeExcerpt(buffer, start, end)
+    assert excerpt.__str__() == """[3:1 - -1:-1]
+consectetur adipiscing
+^^^^^^^^^^^^^^^^^^^^^^"""    
