@@ -7,7 +7,8 @@ def test_position_valid():
 
     text = """lorem ipsum
 dolor sit amet,
-consectetur adipiscing"""
+consectetur adipiscing
+"""
     buffer = Buffer(text)
 
     while not buffer.finished():

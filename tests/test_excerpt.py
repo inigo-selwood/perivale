@@ -31,6 +31,13 @@ lorem ipsum
 lorem ipsum
            ^"""
     
+    # At end of file
+    position = Position(len(text), -1, -1)
+    excerpt = PointExcerpt(buffer, position)
+    assert excerpt.__str__() == """[-1:-1]
+consectetur adipiscing
+                      ^"""
+    
 
 def test_range_excerpt():
 

@@ -73,7 +73,7 @@ class Buffer:
         
         start = self.line_indices[line - 1]
         if line == self.line_count and column == -1:
-            return index == self.length
+            return index == self.length - 1
         
         if column == -1:
             if line == self.line_count:
@@ -272,9 +272,11 @@ class Buffer:
             the given line's text
         """
 
-        # Set line number to current if zero or less
-        if line_number <= 0:
+        # Set line number to current if zero, or last line if -1
+        if line_number == 0:
             line_number = self.position.line
+        elif line_number == -1:
+            line_number = self.line_count
 
         # Assert line number in range
         if line_number < 1 or line_number > self.line_count:
@@ -309,9 +311,11 @@ class Buffer:
             the given line's indentation
         """
 
-        # Set line to current if not specified
-        if line_number <= 0:
+        # Set line number to current if zero, or last line if -1
+        if line_number == 0:
             line_number = self.position.line
+        elif line_number == -1:
+            line_number = self.line_count
 
         # Check line is in bounds
         if line_number < 1 or line_number > self.line_count:
