@@ -6,8 +6,7 @@ from perivale import Buffer, Position
 def test_position_valid():
 
     text = """lorem ipsum
-dolor sit amet,
-consectetur adipiscing
+dolor sit amet
 """
     buffer = Buffer(text)
 
@@ -15,7 +14,33 @@ consectetur adipiscing
         position = buffer.copy_position()
         assert buffer.position_valid(position)
         buffer.increment()
-    
+
+    line_starts = [
+        Position(0, 1, 1),
+        Position(12, 2, 1),
+    ]
+    for position in line_starts:
+        assert buffer.position_valid(position)
+
+    line_ends = [
+        Position(11, 1, -1),
+        Position(26, 2, -1),
+    ]
+    for position in line_ends:
+        assert buffer.position_valid(position)
+
+    word_bounds = {
+        "lorem": (Position(0, 1, 1), Position(5, 1, 6)),
+        "ipsum": (Position(6, 1, 7), Position(11, 1, -1)),
+        "dolor": (Position(12, 2, 1), Position(17, 2, 6)),
+        "sit": (Position(18, 2, 7), Position(21, 2, 10)),
+        "amet": (Position(22, 2, 11), Position(26, 2, -1)),
+    }
+    for pair in word_bounds.values():
+        start, end = pair
+        assert buffer.position_valid(start), f"{start}"
+        assert buffer.position_valid(end), f"{end}"
+
     assert buffer.position_valid(Position(len(text), -1, -1))
 
 

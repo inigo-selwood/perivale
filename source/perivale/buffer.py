@@ -1,7 +1,7 @@
 from copy import copy
 
 from .position import Position
-from .excerpt import PointExcerpt, RangeExcerpt
+from .excerpt import Excerpt
 
 
 class Buffer:
@@ -323,8 +323,8 @@ class Buffer:
 
         return self.line_indentations[line_number - 1]
     
-    def point_excerpt(self, position: Position = None) -> PointExcerpt:
-        """ Creates a point excerpt
+    def excerpt(self, position: Position = None) -> Excerpt:
+        """ Creates an excerpt
 
         If no position is given, the current buffer position is inferred
         
@@ -335,7 +335,7 @@ class Buffer:
         
         Returns
         -------
-        excerpt: PointExcerpt
+        excerpt: Excerpt
             the excerpt created
         
         Raises
@@ -346,34 +346,4 @@ class Buffer:
 
         if not position:
             position = self.copy_position()
-        return PointExcerpt(self, position)
-    
-    def range_excerpt(self, start: Position, end: Position = None):
-        """ Creates a range excerpt
-
-        If no end position is given, the current buffer position is inferred
-        
-        Arguments
-        ---------
-        start: Position
-            position of the excerpt start
-        end: Position
-            position of the excerpt end
-        
-        Returns
-        -------
-        excerpt: RangeExcerpt
-            the excerpt created
-        
-        Raises
-        ------
-        position_invalid: ValueError
-            if one of the positions given is invalid
-        position_illogical: IndexError
-            if the range given (or inferred) doesn't make sense, ie: the start
-            position succeeds the end
-        """
-        
-        if not end:
-            end = self.copy_position()
-        return RangeExcerpt(self, start, end)
+        return Excerpt(self, position)
