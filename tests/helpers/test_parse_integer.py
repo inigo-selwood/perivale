@@ -1,7 +1,18 @@
 import pytest
 
 from perivale import Buffer
-from perivale.helpers import parse_integer
+from perivale.helpers import parse_integer, integer_present
+
+
+def test_integer_present():
+    
+    assert integer_present(Buffer("1234567890"), 10)
+    assert integer_present(Buffer("09afAF"), 16)
+    assert integer_present(Buffer("012345678"), 8)
+    assert integer_present(Buffer("01"), 2)
+
+    assert not integer_present(Buffer(""))
+    assert not integer_present(Buffer("lorem ipsum dolor"))
 
 
 def test_parse_integer_valid():
